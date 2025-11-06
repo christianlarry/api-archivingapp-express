@@ -6,9 +6,8 @@ This project is a RESTful API for an Archiving Application, built with Node.js a
 ## Technologies Used
 - Node.js
 - Express.js
-- MySQL (Database)
+- MongoDB (Database)
 - TypeScript
-- Zod (for environment variable validation)
 
 ## Features
 - User Authentication (Registration, Login)
@@ -21,7 +20,7 @@ This project is a RESTful API for an Archiving Application, built with Node.js a
 ### Prerequisites
 - Node.js (v18 or higher)
 - npm (Node Package Manager)
-- MySQL Server
+- MongoDB
 
 ### Installation
 1. Clone the repository:
@@ -69,7 +68,7 @@ npm run dev
    npm start
    ```
 
-## API Endpoints (Examples)
+## API Endpoints (Not yet Finished)
 
 ### Authentication
 - `POST /api/auth/register`: Register a new user
