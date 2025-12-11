@@ -7,12 +7,12 @@ export interface ValidationErrorItem {
 
 export class ValidationError extends ResponseError {
 
-  public errors: ValidationErrorItem[];
+  public issues: ValidationErrorItem[];
 
-  constructor(errors: ValidationErrorItem[]) {
+  constructor(issues: ValidationErrorItem[]) {
     super(400, "Validation Error");
 
-    this.errors = errors
+    this.issues = issues
 
     // Set the prototype explicitly to ensure instanceof works correctly
     Object.setPrototypeOf(this, ValidationError.prototype);
