@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { DocumentModel } from "@/models/document.model"
 import { DocumentQueryDTO, DocumentUpdateDTO, DocumentUploadDTO } from "@/types/document.types"
 import { ResponseError } from "@/errors/ResponseError"
@@ -67,6 +68,8 @@ export const getDocuments = async (query: DocumentQueryDTO) => {
     filter.tags = { $in: tagsArray }
   }
 
+  DocumentModel.find()
+
   const documents = await DocumentModel.find(filter)
     .populate("uploadedBy", "fullName email")
     .sort({ createdAt: -1 })
@@ -121,7 +124,7 @@ export const deleteDocument = async (id: string) => {
     try {
       fs.unlinkSync(document.storagePath)
     } catch (err) {
-      console.error(`Failed to delete file: ${document.storagePath}`, err)
+      logger.error(`Failed to delete file: ${document.storagePath}. %O`, err)
       // Continue to delete record even if file deletion fails?
       // Usually yes, to keep DB clean.
     }

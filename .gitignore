@@ -17,3 +17,6 @@ yarn-error.log*
 
 # No need to commit coverage
 coverage
+
+# Uploads folder
+public/uploads
