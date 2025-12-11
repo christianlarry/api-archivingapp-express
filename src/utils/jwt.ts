@@ -13,6 +13,6 @@ export const generateToken = (user: IUser): string => {
   })
 }
 
-export const verifyToken = (token: string): any => {
+export const verifyToken = (token: string) => {
   return jwt.verify(token, env.JWT_SECRET)
 }

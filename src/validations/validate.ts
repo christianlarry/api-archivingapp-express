@@ -1,7 +1,7 @@
 import { ValidationError, ValidationErrorItem } from "@/errors/ValidationError";
 import { ZodType } from "zod";
 
-export const validate = <T>(schema: ZodType<T>, data: unknown): T => {
+export const validate = <T>(schema: ZodType, data: T): T => {
   const result = schema.safeParse(data);
 
   if (!result.success) {
