@@ -3,6 +3,7 @@ import cors from "cors"
 import helmet from "helmet"
 import morgan from "morgan"
 import authRoutes from "./routes/auth.routes"
+import documentRoutes from "./routes/document.routes"
 import { errorMiddleware } from "./middlewares/error.middleware"
 import { env } from "./config/env"
 import compression from "compression"
@@ -22,6 +23,7 @@ if (env.NODE_ENV === "development") {
 
 // Routes
 app.use("/api/v1/auth", authRoutes)
+app.use("/api/v1/documents", documentRoutes)
 
 // Health Check
 app.get("/health", (_req, res) => {

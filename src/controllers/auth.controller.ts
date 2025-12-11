@@ -10,7 +10,7 @@ export const register = async (
 ) => {
   try {
     const user = await authService.register(req.body)
-    res.status(201).json({ message: "User registered successfully", user })
+    responseOk(res, 201, { message: "User registered successfully", user })
   } catch (error) {
     next(error)
   }
@@ -35,8 +35,7 @@ export const getMe = async (
   next: NextFunction
 ) => {
   try {
-    // req.user is populated by auth middleware
-    res.status(200).json(req.user)
+    responseOk(res, 200, { user: req.user })
   } catch (error) {
     next(error)
   }
@@ -49,7 +48,7 @@ export const updateProfile = async (
 ) => {
   try {
     const user = await authService.updateProfile(req.user.id, req.body)
-    res.status(200).json(user)
+    responseOk(res, 200, { user })
   } catch (error) {
     next(error)
   }
@@ -62,7 +61,7 @@ export const changePassword = async (
 ) => {
   try {
     const result = await authService.changePassword(req.user.id, req.body)
-    res.status(200).json(result)
+    responseOk(res, 200, result)
   } catch (error) {
     next(error)
   }
