@@ -9,6 +9,6 @@ setupMongooseCloseOnExit()
 const PORT:number = env.PORT || 3000;
 
 app.listen(PORT, () => {
-  logger.info(`🚀 Server is running on htEtp://localhost:${PORT}`);
+  logger.info(`🚀 Server is running on http://localhost:${PORT}`);
   logger.info(`Environment: ${env.NODE_ENV}`);
 })

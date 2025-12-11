@@ -10,17 +10,21 @@ export const errorMiddleware = (err:Error, req:Request, res:Response, next:NextF
     return
   }
 
-  logger.error(err.stack)
-
   if (err instanceof ValidationError) {
+    logger.warn("Validation error: %O", err.errors)
+
     // Pastikan format response konsisten
     responseErr(res, err.status, {
       message: err.message,
       errors: err.errors
     })
   } else if (err instanceof ResponseError) {
+    logger.warn("Response error: %s", err.message)
+
     responseErr(res, err.status, { message: err.message })
   } else {
+    logger.error("Unexpected error: %O", err)
+
     responseErr(res, 500, { message: err.message })
   }
 }

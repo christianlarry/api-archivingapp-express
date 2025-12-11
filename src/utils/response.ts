@@ -1,5 +1,5 @@
 import { ValidationErrorItem } from "@/errors/ValidationError"
-import { Pagination } from "@/types/Pagination"
+import { Pagination } from "@/types/global.types"
 import {Response} from "express"
 
 const responseOk = <T>(res:Response, status:number, data:T, page?:Pagination) => {
