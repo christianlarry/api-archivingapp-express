@@ -14,6 +14,9 @@ router.post(
   authController.login
 )
 
+router.post("/refresh-token", authController.refreshToken)
+router.post("/logout", authController.logout)
+
 router.get("/me", protect, authController.getMe)
 
 router.put(

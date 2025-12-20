@@ -10,6 +10,8 @@ const envValidationSchema = z.object({
   MONGODB_NAME: z.string().min(1, "MongoDB database name is required"),
   JWT_SECRET: z.string().min(1, "JWT secret is required"),
   JWT_ACCESS_EXPIRATION_MINUTE: z.string().transform((val) => parseInt(val, 10)),
+  JWT_REFRESH_SECRET: z.string().min(1, "JWT refresh secret is required"),
+  JWT_REFRESH_EXPIRATION_DAYS: z.string().transform((val) => parseInt(val, 10)),
 })
 
 const envValidation = envValidationSchema.safeParse(process.env)

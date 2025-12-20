@@ -6,6 +6,7 @@ export interface IUser extends Document {
   fullName: string
   role: "user" | "admin"
   isActive: boolean
+  refreshTokens: string[]
   createdAt: Date
   updatedAt: Date
 }
@@ -36,6 +37,10 @@ const UserSchema: Schema = new Schema(
     isActive: {
       type: Boolean,
       default: true,
+    },
+    refreshTokens: {
+      type: [String],
+      select: false,
     },
   },
   {

@@ -2,6 +2,7 @@ import express, { Application } from "express"
 import cors from "cors"
 import helmet from "helmet"
 import morgan from "morgan"
+import cookieParser from "cookie-parser"
 import authRoutes from "./routes/auth.routes"
 import documentRoutes from "./routes/document.routes"
 import usersRoutes from "./routes/users.routes"
@@ -16,6 +17,7 @@ app.use(helmet())
 app.use(cors())
 app.use(express.json())
 app.use(express.urlencoded({ extended: true }))
+app.use(cookieParser())
 app.use(compression())
 
 if (env.NODE_ENV === "development") {
