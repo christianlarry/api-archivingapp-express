@@ -19,4 +19,4 @@ yarn-error.log*
 coverage
 
 # Uploads folder
-public/uploads
+public

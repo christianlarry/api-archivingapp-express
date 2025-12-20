@@ -6,7 +6,6 @@ import { DocumentQueryDTO, DocumentUpdateDTO, DocumentUploadDTO } from "@/types/
 import { ResponseError } from "@/errors/ResponseError"
 import { responseOk } from "@/utils/response"
 import { AuthRequest } from "@/middlewares/auth.middleware"
-import { logger } from "@/config/logger"
 
 export const upload = async (req: AuthRequest, res: Response, next: NextFunction) => {
   try {
@@ -38,8 +37,6 @@ export const index = async (req: Request, res: Response, next: NextFunction) => 
       category: req.query.category as string,
       tags: req.query.tags as string
     }
-
-    logger.info("Document query params: %O", query)
 
     const result = await documentService.getDocuments(query)
 
