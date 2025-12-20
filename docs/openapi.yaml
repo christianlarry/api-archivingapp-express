@@ -306,6 +306,58 @@ paths:
         '400':
           description: Invalid old password or validation error
 
+  /auth/refresh-token:
+    post:
+      summary: Get a new access token using a refresh token (HttpOnly cookie)
+      tags:
+        - Authentication
+      security: [] # No direct bearer token needed, uses HttpOnly cookie
+      parameters:
+        - in: cookie
+          name: refreshToken
+          schema:
+            type: string
+          required: true
+          description: HttpOnly refresh token cookie
+      responses:
+        '200':
+          description: New access token and user info
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  token:
+                    type: string
+                  user:
+                    $ref: '#/components/schemas/User'
+        '401':
+          description: Unauthorized (Refresh token not found)
+        '403':
+          description: Forbidden (Invalid or reused refresh token)
+
+  /auth/logout:
+    post:
+      summary: Log out current user and invalidate refresh token
+      tags:
+        - Authentication
+      security: [] # No direct bearer token needed, clears HttpOnly cookie
+      parameters:
+        - in: cookie
+          name: refreshToken
+          schema:
+            type: string
+          required: false # Can be called without refresh token, just clears cookie
+          description: HttpOnly refresh token cookie (will be cleared)
+      responses:
+        '200':
+          description: Logged out successfully
+        '401':
+          description: Unauthorized (Access token invalid or missing) # If protect was used
+        '500':
+          description: Internal server error
+
+
   /documents/upload:
     post:
       summary: Upload a new document

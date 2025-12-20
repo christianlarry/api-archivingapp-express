@@ -1,4 +1,4 @@
-import {z} from "zod"
+import { z } from "zod"
 import dotenv from "dotenv"
 
 dotenv.config()
@@ -19,6 +19,8 @@ const envValidation = envValidationSchema.safeParse(process.env)
 if (!envValidation.success) {
   console.error("❌ Invalid environment variables:", z.treeifyError(envValidation.error))
   throw new Error("Invalid environment variables")
+} else {
+  console.log("✅ Environment variables loaded and validated successfully.")
 }
 
 export const env = envValidation.data
