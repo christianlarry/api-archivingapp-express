@@ -1,9 +1,9 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { DocumentModel } from "@/models/document.model"
 import { DocumentQueryDTO, DocumentUpdateDTO, DocumentUploadDTO } from "@/types/document.types"
 import { ResponseError } from "@/errors/ResponseError"
 import fs from "fs"
 import { logger } from "@/config/logger"
+import * as cache from "@/utils/cache"
 
 export const uploadDocument = async (
   file: Express.Multer.File,
@@ -43,58 +43,67 @@ export const uploadDocument = async (
     uploadedBy: userId,
   })
 
+  // Invalidate list cache
+  await cache.clearKeys("docs:list:*")
+
   return document
 }
 
 export const getDocuments = async (query: DocumentQueryDTO) => {
-  const page = query.page || 1
-  const limit = query.limit || 10
-  const skip = (page - 1) * limit
+  // Generate a unique cache key based on query parameters
+  const cacheKey = `docs:list:${JSON.stringify(query)}`
 
-  const filter: any = {}
+  return cache.getOrSet(cacheKey, async () => {
+    const page = query.page || 1
+    const limit = query.limit || 10
+    const skip = (page - 1) * limit
 
-  if (query.q) {
-    filter.$text = { $search: query.q }
-  }
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const filter: any = {}
 
-  if (query.category) {
-    filter.category = query.category
-  }
+    if (query.q) {
+      filter.$text = { $search: query.q }
+    }
 
-  if (query.tags) {
-    // If multiple tags are sent ?tags=tag1,tag2 or just ?tags=tag1
-    // The query DTO defines it as string.
-    const tagsArray = query.tags.split(",").map((t) => t.trim())
-    filter.tags = { $in: tagsArray }
-  }
+    if (query.category) {
+      filter.category = query.category
+    }
 
-  DocumentModel.find()
+    if (query.tags) {
+      const tagsArray = query.tags.split(",").map((t) => t.trim())
+      filter.tags = { $in: tagsArray }
+    }
 
-  const documents = await DocumentModel.find(filter)
-    .populate("uploadedBy", "fullName email")
-    .sort({ createdAt: -1 })
-    .skip(skip)
-    .limit(limit)
+    const documents = await DocumentModel.find(filter)
+      .populate("uploadedBy", "fullName email")
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit)
 
-  const total = await DocumentModel.countDocuments(filter)
+    const total = await DocumentModel.countDocuments(filter)
 
-  return {
-    data: documents,
-    pagination: {
-      page,
-      limit,
-      total,
-      totalPages: Math.ceil(total / limit),
-    },
-  }
+    return {
+      data: documents,
+      pagination: {
+        page,
+        limit,
+        total,
+        totalPages: Math.ceil(total / limit),
+      },
+    }
+  }, 3600) // Cache for 1 hour
 }
 
 export const getDocumentById = async (id: string) => {
-  const document = await DocumentModel.findById(id).populate("uploadedBy", "fullName email")
-  if (!document) {
-    throw new ResponseError(404, "Document not found")
-  }
-  return document
+  const cacheKey = `docs:id:${id}`
+
+  return cache.getOrSet(cacheKey, async () => {
+    const document = await DocumentModel.findById(id).populate("uploadedBy", "fullName email")
+    if (!document) {
+      throw new ResponseError(404, "Document not found")
+    }
+    return document
+  }, 3600) // Cache for 1 hour
 }
 
 export const updateDocument = async (id: string, data: DocumentUpdateDTO) => {
@@ -110,6 +119,11 @@ export const updateDocument = async (id: string, data: DocumentUpdateDTO) => {
   if (!document) {
     throw new ResponseError(404, "Document not found")
   }
+
+  // Invalidate specific cache and list cache
+  await cache.del(`docs:id:${id}`)
+  await cache.clearKeys("docs:list:*")
+
   return document
 }
 
@@ -125,16 +139,23 @@ export const deleteDocument = async (id: string) => {
       fs.unlinkSync(document.storagePath)
     } catch (err) {
       logger.error(`Failed to delete file: ${document.storagePath}. %O`, err)
-      // Continue to delete record even if file deletion fails?
-      // Usually yes, to keep DB clean.
     }
   }
 
   await document.deleteOne()
+
+  // Invalidate specific cache and list cache
+  await cache.del(`docs:id:${id}`)
+  await cache.clearKeys("docs:list:*")
+
   return { message: "Document deleted successfully" }
 }
 
 export const getDocumentFile = async (id: string) => {
+  // We generally don't cache file streams or paths in the same way, 
+  // but we could cache the metadata lookup. 
+  // For now, let's keep it direct to ensure file existence check is real-time.
+
   const document = await DocumentModel.findById(id)
   if (!document) {
     throw new ResponseError(404, "Document not found")
