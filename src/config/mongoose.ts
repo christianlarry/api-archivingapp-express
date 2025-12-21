@@ -45,20 +45,3 @@ export async function disconnectDatabase(): Promise<void> {
 mongoose.connection.on("connected", () => logger.info("Mongoose default connection open"))
 mongoose.connection.on("error", (err) => logger.error("Mongoose connection error: %O", err))
 mongoose.connection.on("disconnected", () => logger.info("Mongoose default connection disconnected"))
-
-// Graceful shutdown helper to be used by the application entrypoint
-export function setupMongooseCloseOnExit(): void {
-  const graceful = async (signal: string) => {
-    try {
-      logger.info("Received %s, closing MongoDB connection...", signal)
-      await disconnectDatabase()
-      process.exit(0)
-    } catch (err) {
-      logger.error("Error during graceful shutdown: %O", err)
-      process.exit(1)
-    }
-  }
-
-  process.on("SIGINT", () => graceful("SIGINT"))
-  process.on("SIGTERM", () => graceful("SIGTERM"))
-}

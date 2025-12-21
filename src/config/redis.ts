@@ -28,19 +28,14 @@ redisClient.connect().catch((err) => {
   logger.error("Failed to connect to Redis on startup:", err);
 });
 
-// handle redis disconnection on app termination
-const gracefulShutdown = async (signal: string) => {
+export const disconnectRedis = async () => {
   try {
-    logger.info("Received %s, closing Redis connection...", signal);
     await redisClient.quit();
-    process.exit(0);
+    logger.info("Redis connection closed");
   } catch (err) {
-    logger.error("Error during Redis graceful shutdown: %O", err);
-    process.exit(1);
+    logger.error("Error closing Redis connection:", err);
+    throw err;
   }
 };
-
-process.on("SIGINT", () => gracefulShutdown("SIGINT"));
-process.on("SIGTERM", () => gracefulShutdown("SIGTERM"));
 
 export default redisClient;

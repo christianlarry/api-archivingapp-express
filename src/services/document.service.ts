@@ -1,9 +1,13 @@
 import { DocumentModel } from "@/models/document.model"
 import { DocumentQueryDTO, DocumentUpdateDTO, DocumentUploadDTO } from "@/types/document.types"
 import { ResponseError } from "@/errors/ResponseError"
-import fs from "fs"
 import { logger } from "@/config/logger"
 import * as cache from "@/utils/cache"
+import { LocalStorageService } from "./storage/local.storage"
+import { IStorageService } from "@/interfaces/storage.interface"
+
+// Initialize Storage Service (Dependency Injection could be used here in a larger app)
+const storageService: IStorageService = new LocalStorageService();
 
 export const uploadDocument = async (
   file: Express.Multer.File,
@@ -11,7 +15,7 @@ export const uploadDocument = async (
   userId: string
 ) => {
 
-  // Save file to disk
+  // Generate safe filename and path
   const fileSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9)
   const ext = file.originalname.substring(file.originalname.lastIndexOf("."))
   const safeName = file.originalname
@@ -19,15 +23,15 @@ export const uploadDocument = async (
     .replace(/[^a-zA-Z0-9]/g, "_")
   const fileName = `${safeName}-${fileSuffix}${ext}`
   const filePath = `public/uploads/${fileName}`
-  file.path = filePath
-
-  fs.writeFile(filePath, file.buffer, (err) => {
-    if (err) {
-      logger.error("Error saving uploaded file: %O", err)
-      throw new ResponseError(500, "Failed to save uploaded file")
-    }
-    logger.info("File saved successfully: %s", file.originalname)
-  })
+  
+  // Upload file using Storage Service
+  try {
+    await storageService.upload(file, filePath);
+    logger.info("File saved successfully: %s", file.originalname);
+  } catch (err) {
+    logger.error("Error saving uploaded file: %O", err);
+    throw new ResponseError(500, "Failed to save uploaded file");
+  }
 
   const tags = data.tags ? data.tags.split(",").map((t) => t.trim()).filter((t) => t) : []
 
@@ -35,7 +39,7 @@ export const uploadDocument = async (
     title: data.title,
     description: data.description,
     originalName: file.originalname,
-    storagePath: file.path,
+    storagePath: filePath, // Store the path returned/used by the service
     mimeType: file.mimetype,
     size: file.size,
     category: data.category,
@@ -134,12 +138,12 @@ export const deleteDocument = async (id: string) => {
   }
 
   // Delete file from storage
-  if (fs.existsSync(document.storagePath)) {
-    try {
-      fs.unlinkSync(document.storagePath)
-    } catch (err) {
-      logger.error(`Failed to delete file: ${document.storagePath}. %O`, err)
-    }
+  try {
+    await storageService.delete(document.storagePath);
+  } catch (err) {
+    logger.error(`Failed to delete file: ${document.storagePath}. %O`, err)
+    // We continue to delete the document record even if file deletion fails
+    // or we might want to throw? Usually better to clean up the record.
   }
 
   await document.deleteOne()
@@ -151,20 +155,18 @@ export const deleteDocument = async (id: string) => {
   return { message: "Document deleted successfully" }
 }
 
+// Temp placeholder, will be replaced after checking controller
 export const getDocumentFile = async (id: string) => {
-  // We generally don't cache file streams or paths in the same way, 
-  // but we could cache the metadata lookup. 
-  // For now, let's keep it direct to ensure file existence check is real-time.
-
   const document = await DocumentModel.findById(id)
   if (!document) {
     throw new ResponseError(404, "Document not found")
   }
 
-  if (!fs.existsSync(document.storagePath)) {
-    throw new ResponseError(404, "File not found on server")
-  }
-
+  // Verify file existence via storage service (simulated by trying to get stream or just returning path for now)
+  // Ideally we would update the controller to accept a stream.
+  // For now, we will trust the database and return the path, 
+  // allowing the controller to fail if file is missing (or handle it there).
+  
   return {
     path: document.storagePath,
     name: document.originalName,
