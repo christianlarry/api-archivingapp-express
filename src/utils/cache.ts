@@ -29,7 +29,7 @@ export const getOrSet = async <T>(
 
   try {
     if (data) {
-        await redisClient.setex(key, ttl, JSON.stringify(data));
+      await redisClient.setex(key, ttl, JSON.stringify(data));
     }
   } catch (error) {
     logger.error(`Redis SET error for key ${key}:`, error);
@@ -42,11 +42,11 @@ export const getOrSet = async <T>(
  * Deletes a specific key from cache
  */
 export const del = async (key: string) => {
-    try {
-        await redisClient.del(key);
-    } catch (error) {
-        logger.error(`Redis DEL error for key ${key}:`, error);
-    }
+  try {
+    await redisClient.del(key);
+  } catch (error) {
+    logger.error(`Redis DEL error for key ${key}:`, error);
+  }
 }
 
 /**
@@ -54,25 +54,25 @@ export const del = async (key: string) => {
  * Uses SCAN to be performant and non-blocking
  */
 export const clearKeys = async (pattern: string) => {
-    try {
-        const stream = redisClient.scanStream({
-            match: pattern,
-            count: 100 // Process in batches
-        });
+  try {
+    const stream = redisClient.scanStream({
+      match: pattern,
+      count: 100 // Process in batches
+    });
 
-        stream.on("data", (keys: string[]) => {
-            if (keys.length) {
-                const pipeline = redisClient.pipeline();
-                keys.forEach(key => pipeline.del(key));
-                pipeline.exec();
-            }
-        });
+    stream.on("data", (keys: string[]) => {
+      if (keys.length) {
+        const pipeline = redisClient.pipeline();
+        keys.forEach(key => pipeline.del(key));
+        pipeline.exec();
+      }
+    });
 
-        stream.on("end", () => {
-             logger.debug(`Cleared cache pattern: ${pattern}`);
-        });
-        
-    } catch (error) {
-        logger.error(`Redis clearKeys error for pattern ${pattern}:`, error);
-    }
+    stream.on("end", () => {
+      logger.debug(`Cleared cache pattern: ${pattern}`);
+    });
+
+  } catch (error) {
+    logger.error(`Redis clearKeys error for pattern ${pattern}:`, error);
+  }
 }
