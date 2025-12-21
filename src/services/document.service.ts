@@ -23,7 +23,7 @@ export const uploadDocument = async (
     .replace(/[^a-zA-Z0-9]/g, "_")
   const fileName = `${safeName}-${fileSuffix}${ext}`
   const filePath = `public/uploads/${fileName}`
-  
+
   // Upload file using Storage Service
   try {
     await storageService.upload(file, filePath);
@@ -162,11 +162,11 @@ export const getDocumentFile = async (id: string) => {
     throw new ResponseError(404, "Document not found")
   }
 
-  // Verify file existence via storage service (simulated by trying to get stream or just returning path for now)
-  // Ideally we would update the controller to accept a stream.
-  // For now, we will trust the database and return the path, 
-  // allowing the controller to fail if file is missing (or handle it there).
-  
+  const exists = await storageService.exists(document.storagePath);
+  if (!exists) {
+    throw new ResponseError(404, "File not found on server");
+  }
+
   return {
     path: document.storagePath,
     name: document.originalName,
